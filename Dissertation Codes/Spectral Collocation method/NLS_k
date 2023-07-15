@@ -1,0 +1,56 @@
+clear all
+Lx=32;
+
+N=256;
+%N=512;
+
+dx=Lx/N; x=[-Lx/2:dx:Lx/2-dx]'; %kx=[0:N/2-1 -N/2:-1]'*2*pi/Lx;
+
+
+mu=1; sigma=-1; theta=1; s=-1;
+%psi=sqrt(2*mu/gamma)*sech(sqrt(2*mu)*x);
+
+%classical NLS (and RT)
+
+% q_0=sqrt(mu)*sech(sqrt(mu)*x);
+% r_0=sigma*conj(q_0);
+
+%PT Symm NLS
+
+q_0=sqrt(mu)*sech(sqrt(mu)*x-i*theta);
+r_0=sigma*conj(sqrt(mu)*sech(sqrt(mu)*(-x)-i*theta));
+
+%Spectral differentiation matrix
+[xx,Dxx] = fourdif(N,2);
+Dxx = Dxx*(2*pi/Lx)^2;
+
+
+k_save = (0:0.1:10)';
+P = length(k_save);
+imag_save = [];
+%Z = zeros(N,N);
+
+for pp = 1:P
+    k = k_save(pp);
+    
+    L= -Dxx + diag(mu+4*q_0.*r_0+s*k^2);
+    
+    %Matrix M
+%     M_11=L;
+%     M_12= diag(2*q_0.^2);
+%     M_21= diag(-2*r_0.^2);
+%     M_22=-L;
+    
+    %Matrix -M*
+    M_11=-conj(L);
+    M_12= diag(-2*conj(q_0).^2);
+    M_21= diag(2*conj(r_0).^2);
+    M_22=conj(L);
+
+    MAT = [M_11 M_12; M_21 M_22];
+    [Vec,E] = eig(MAT); % find eig
+    imag_save = [imag_save; norm(imag(diag(E)),inf) ];
+end
+plot(k_save,imag_save)
+%omega=E(index(1),index(1));
+
